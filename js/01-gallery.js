@@ -5,14 +5,22 @@ const itemsMurkup = createItemsImagesMurkup(galleryItems);
 galleryImagesContainerEl.insertAdjacentHTML('beforeend', itemsMurkup);
 galleryImagesContainerEl.addEventListener('click', onOpenModal);
 
+let currentIndex = 0;
+const instance = basicLightbox.create(`
+    <img src=""width="800" height="600">`, {
+      onShow: (instance) => { window.addEventListener('keydown', onBtnPress); },
+      onClose: (instance) => { window.removeEventListener('keydown', onBtnPress) }
+    });
+
 function createItemsImagesMurkup(item) {
-    return galleryItems.map(({ preview, original, description }) => {
+    return galleryItems.map(({ preview,original, description }, index) => {
         return `<div class="gallery__item">
       <a class="gallery__link" href="${original.value}">
         <img
           class="gallery__image"
           src="${preview}"
           data-source="${original}"
+          data-index="${index}"
           alt="${description}"
         />
       </a>
@@ -25,20 +33,65 @@ function onOpenModal(event) {
     if (event.target.classList.contains('gallery')) {
         return;
     }
-    const sourceImg = event.target.dataset.source;
+  const sourceImg = event.target.dataset.source;
+  setUrl(sourceImg);
+  currentIndex = Number(event.target.dataset.index);
+  console.log(currentIndex);
+  
     
-    const instance = basicLightbox.create(`
-    <img src="${sourceImg}"width="800" height="600">`, {
-      onShow: (instance) => { window.addEventListener('keydown', onEscKeyPress); },
-      onClose: (instance) => { window.removeEventListener('keydown', onEscKeyPress) }
-    });
     instance.show();
 
-    function onEscKeyPress(event) {
-    if (event.code !== 'Escape') {
-        return;
-    }
-    instance.close();
-    };
+  
 }
 
+function setUrl(url) {
+  instance.element().querySelector('img').src = url;
+}
+// function onEscKeyPress(event) {
+//     if (event.code === 'ArrowRight') {
+//       console.log('Right:');
+//       currentIndex += 1;
+//       if (currentIndex > galleryItems.length -1) {
+//         currentIndex = 0;
+//       }
+//       console.log(currentIndex);
+//       console.log(galleryItems[currentIndex].original);
+//       setUrl(galleryItems[currentIndex].original);
+      
+//     }
+//     if (event.code === 'ArrowLeft') {
+//       console.log('Left');
+//       currentIndex -= 1;
+//       if (currentIndex < 0) {
+//         currentIndex = galleryItems.length - 1;
+//       }
+//       setUrl(galleryItems[currentIndex].original);
+//     }
+//     if (event.code === 'Escape') {
+//         instance.close();
+//     }
+//     
+//     };
+function onBtnPress(event) {
+  switch (event.code) {
+    case 'ArrowRight':
+      currentIndex += 1;
+      if (currentIndex > galleryItems.length - 1) {
+        currentIndex = 0;
+      }
+      setUrl(galleryItems[currentIndex].original);
+      break;
+    case 'ArrowLeft':
+      currentIndex -= 1;
+      if (currentIndex < 0) {
+        currentIndex = galleryItems.length - 1;
+      }
+      setUrl(galleryItems[currentIndex].original);
+      break;
+    case 'Escape':
+      instance.close();
+      break;
+    default: console.log('Picture key');
+    }
+    
+}
